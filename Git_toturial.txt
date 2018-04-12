@@ -1,0 +1,26 @@
+经过git init 之后
+
+首先是git add file1.txt file2.txt...
+然后是git commit -m "...balabala..."
+
+
+
+
+git status命令可以查看工作区的状态(常用)
+git diff 命令可以查看文件的修改内容
+ssh-keygen -t rsa -C "myemail@example.com"可以创建我个人帐户的sshkey
+然后在Github中添加公钥的内容即可
+要关联一个远程库，使用命令git remote add origin git@servername:path/reponame.git
+关联后，使用命令git push -u origin master 第一次推送master分支的所有内容
+此后，每次本地提交后，只要有必要，就可以使用git push origin master 推送最新修改
+
+
+
+使用git reset --hard commit_id就可以在版本的历史之间穿梭
+git log可以查看提交历史，以便确定要回到哪个版本
+git reflog可以查看命令历史，以便要回到未来的哪个版本
+git checkout -- file 命令可以丢弃工作区的修改
+git reset HEAD file 可以将git add的文件放回到工作区
+git rm 用于删除一个文件
+
+
