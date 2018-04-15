@@ -25,23 +25,68 @@ myinput = [[0,0,5,3,0,0,0,0,0],
            [0,6,0,5,0,0,0,0,9],
            [0,0,4,0,0,0,0,3,0],
            [0,0,0,0,0,9,7,0,0]]
-        
-def solvespecielem(i,j):
+sudokubackup = [[set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()],
+                [set(),set(),set(),set(),set(),set(),set(),set(),set()]]
+Flag_IsFillElem = 0
+#常规套路，将当前行列中符合要求的元素添加到其对应的集合中
+def updateset():
+    global sudokubackup
     setall = set({0,1,2,3,4,5,6,7,8,9})
-    settemp = set()
-    settemp.update(set(raw(i)))
-    settemp.update(set(column(j)))
-    settemp.update(set(gong(i,j)))
-    if(len(setall.difference(settemp)) == 1):
-        myinput[i][j] = int(list(setall.difference(settemp))[0])
+    for i in range(9):
+        for j in range(9):
+            if(myinput[i][j] == 0):
+                sudokubackup[i][j] = set()
+                sudokubackup[i][j].update(set(raw(i)))
+                sudokubackup[i][j].update(set(column(j)))
+                sudokubackup[i][j].update(set(gong(i,j)))
+                sudokubackup[i][j] = setall.difference(sudokubackup[i][j])
+            else:
+                sudokubackup[i][j] = set()
+
+#def forcesolve():
+    
+def solvespecielem(i,j):
+    global sudokubackup
+    global Flag_IsFillElem
+    setall = set({0,1,2,3,4,5,6,7,8,9})
+    sudokubackup[i][j] = set()
+    sudokubackup[i][j].update(set(raw(i)))
+    sudokubackup[i][j].update(set(column(j)))
+    sudokubackup[i][j].update(set(gong(i,j)))
+    sudokubackup[i][j] = setall.difference(sudokubackup[i][j])
+    if(len(sudokubackup[i][j]) == 1):#每填一个数都要更新一下备用集合
+        myinput[i][j] = list(sudokubackup[i][j])[0]
+        #print("position is",i,j,"Enter num is",list(sudokubackup[i][j])[0])
+        updateset()
+        Flag_IsFillElem = 1
 def CalculateSudoku():
+    print("Enter CalculateSudoku")
+    global sudokubackup
+    global Flag_IsFillElem
+    #判断上次递归的数独是否填入数字
+    #没填入就暴力求解
+    Flag_IsFillElem = 0
+    #如果不相同就继续用常规套路求解
     for i in range(9):
         for j in range(9):
             if(myinput[i][j] == 0):
                 solvespecielem(i,j)
+    if(Flag_IsFillElem == 0): #没填入数，开始暴力求解
+        #forcesolve()
+        print(sudokubackup)
+    #OutputMysudoku()
+    #print(sudokubackup)
+    #print("IsFillElem =", Flag_IsFillElem)
     if(issolved() == False):
-        print("Not Solved!")
         CalculateSudoku()
+    print("Exit CalculateSudoku")
 
 def issolved():
     for i in range(9):
@@ -71,7 +116,6 @@ def gong(i,j):
     g = q*3+p  #计算出第几宫 
     for x in range(int(g%3)*3,int(g%3)*3+3):
         for y in range(int(g/3)*3,int(g/3)*3+3):
-            #print(myinput[x][y], end = " ")
             ok.append(myinput[x][y])
     return ok
 def OutputMysudoku():
@@ -85,3 +129,8 @@ OutputMysudoku()
 print()
 CalculateSudoku()
 OutputMysudoku()
+##for i in range(9):
+##    for j in range(9):
+##        if(myinput[i][j] == 0):
+##            solvespecielem(i,j)
+
