@@ -26,15 +26,16 @@ import time
 ##           [0,6,0,5,0,0,0,0,9],
 ##           [0,0,4,0,0,0,0,3,0],
 ##           [0,0,0,0,0,9,7,0,0]]
-myinput = [[3,9,5,7,2,4,8,6,1],
-           [4,8,7,1,6,3,9,5,2],
-           [6,2,1,9,8,5,3,7,4],
-           [0,4,0,5,1,8,6,3,7],
-           [5,6,8,2,3,7,4,1,9],
-           [7,1,3,4,9,6,5,2,8],
-           [0,3,0,8,5,1,7,4,6],
-           [8,7,6,3,4,2,1,9,5],
-           [1,5,4,6,7,9,2,8,3]]
+##myinput = [[3,9,5,7,2,4,8,6,1],
+##           [4,8,7,1,6,3,9,5,2],
+##           [6,2,1,9,8,5,3,7,4],
+##           [0,4,0,5,1,8,6,3,7],
+##           [5,6,8,2,3,7,4,1,9],
+##           [7,1,3,4,9,6,5,2,8],
+##           [0,3,0,8,5,1,7,4,6],
+##           [8,7,6,3,4,2,1,9,5],
+##           [1,5,4,6,7,9,2,8,3]]
+
 sudokubackup = [[set(),set(),set(),set(),set(),set(),set(),set(),set()],
                 [set(),set(),set(),set(),set(),set(),set(),set(),set()],
                 [set(),set(),set(),set(),set(),set(),set(),set(),set()],
@@ -60,18 +61,21 @@ def updateset(board,Set):
                 Set[i][j] = set()
 
 def forcesolve(board,Set,p,q):
-    print("Enter forcesolve(board,Set,",p,q,")")
+    #print("Enter forcesolve(board,Set,",p,q,")")
     if(issolved(board) == True):
-        print("Is Solved!")
+        #print("Is Solved!")
+        
         OutputMysudoku(board)
-        print()
+        #print()
         return
     elif(hassolution(board) == False):
-        print("Has No solution!")
-        print("Exit forcesolve(board,Set,",p,q,")")
+        #print("Has No solution!")
+        board[p][q] = 0   
+        #print("Exit forcesolve(board,Set,",p,q,")")
         return
     else:
         updateset(board,Set)
+        
         for i in range(9):
             for j in range(9):
                 if(board[i][j] == 0):
@@ -82,10 +86,10 @@ def forcesolve(board,Set,p,q):
                         board[i][j] = 0
                         board[p][q] = 0
                     #OutputMysudoku(board)
-                    print("Exit forcesolve(board,Set,",p,q,")")
+                    #print("Exit forcesolve(board,Set,",p,q,")")
                     return
                              
-def solvespecielem(board,i,j):
+def solvespecielem(board,Set,i,j):
     global sudokubackup
     global Flag_IsFillElem
     setall = set({0,1,2,3,4,5,6,7,8,9})
@@ -94,15 +98,16 @@ def solvespecielem(board,i,j):
     sudokubackup[i][j].update(set(column(j)))
     sudokubackup[i][j].update(set(gong(i,j)))
     sudokubackup[i][j] = setall.difference(sudokubackup[i][j])
-    if(len(sudokubackup[i][j]) == 1):#每填一个数都要更新一下备用集合
-        board[i][j] = list(sudokubackup[i][j])[0]
-        #print("position is",i,j,"Enter num is",list(sudokubackup[i][j])[0])
+    if(len(Set[i][j]) == 1):#每填一个数都要更新一下备用集合
+        board[i][j] = list(Set[i][j])[0]
+        #print("position is",i,j,"Enter num is",list(Set[i][j])[0])
         updateset(board,sudokubackup)
         Flag_IsFillElem = 1
         
 def CalculateSudoku(board,Set):
-    print("Enter CalculateSudoku")
+    #print("Enter CalculateSudoku")
     global Flag_IsFillElem
+    #OutputMysudoku(board)
     #判断上次递归的数独是否填入数字
     #没填入就暴力求解
     Flag_IsFillElem = 0
@@ -110,17 +115,25 @@ def CalculateSudoku(board,Set):
     for i in range(9):
         for j in range(9):
             if(board[i][j] == 0):
-                solvespecielem(board,i,j)
-                tempi, tempj = i , j
+                #print("solvespecielem(board,",i,j,")")
+                solvespecielem(board,Set,i,j)
+    #print(Flag_IsFillElem)                        
     if(Flag_IsFillElem == 0): #没填入数，开始暴力求解
-        #forcesolve(board,Set, tempi, tempj)
-        print(sudokubackup)
+        for x in range(9):
+            for y in range(9):
+                if(board[x][y] == 0):
+                    forcesolve(board, Set, x, y)
+                    return
+        #print(sudokubackup)
     #OutputMysudoku()
     #print(sudokubackup)
     #print("IsFillElem =", Flag_IsFillElem)
     if(issolved(board) == False):
         CalculateSudoku(board,Set)
-    print("Exit CalculateSudoku")
+    else:
+        #print("Is Solved!")
+        OutputMysudoku(board)
+    #print("Exit CalculateSudoku")
 
 def issolved(board):
     for i in range(1,10):
@@ -188,16 +201,17 @@ def hassolution(board):
                 tempgong = gong(j,k)
                 if(tempgong.count(i) > 1):
                     return False #肯定无解          
-    return True 
-#InputMysudoku()
-OutputMysudoku(myinput)
-print()
-start = time.time()
-#CalculateSudoku(myinput,sudokubackup)
-forcesolve(myinput, sudokubackup, 3, 0)
+    return True
+
+myinput = []
+InputMysudoku()
 #OutputMysudoku(myinput)
+#print()
+#start = time.time()
+CalculateSudoku(myinput,sudokubackup)
+#forcesolve(myinput, sudokubackup, 0, 0)
 #print(issolved(myinput))
-print("Time Used:", time.time()-start)
+#print("Time Used:", time.time()-start)
 
 
 ##for i in range(9):
