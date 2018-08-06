@@ -1,0 +1,34 @@
+/*
+ * type.h
+ *
+ *  Created on: 2018Äê8ÔÂ6ÈÕ
+ *      Author: t84105238
+ */
+
+#ifndef INC_TYPE_H_
+#define INC_TYPE_H_
+#include <list>
+#include <set>
+
+
+class point
+{
+public:
+	int row;
+	int col;
+	int value;
+	std::list<int> availist;
+	point(){ }
+	point(int r, int c);
+};
+point::point(int r, int c)
+{
+	this->row = r;
+	this->col = c;
+	this->value = 0;
+	this->availist.clear();
+}
+typedef std::list<point> pointlist_t;
+
+
+#endif /* INC_TYPE_H_ */

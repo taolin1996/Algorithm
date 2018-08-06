@@ -1,0 +1,207 @@
+/*
+ * main.cpp
+ *
+ *  Created on: 2018Äê8ÔÂ6ÈÕ
+ *      Author: t84105238
+ */
+
+#include "type.h"
+#include "sudoku.h"
+#include <iostream>
+using namespace std;
+int base_point[][2] = {{0,0}, {0,3}, {0,6},\
+                        {3,0}, {3,3}, {3,6},\
+                        {6,0}, {6,3}, {6,6}};
+pointlist_t pointList;
+/*
+ * description: get the board point whose value is 0, and calculate the available number in this point.
+ *
+ * return value: the list of point whose value is 0
+ *
+ * */
+pointlist_t init_board(int board[][9])
+{
+	pointlist_t pointlist;
+	for (int r=0; r<9; r++)
+	{
+		for (int c=0; c<9; c++)
+		{
+			if(board[r][c] == 0)
+			{
+				point p = point(r,c);
+				for (int num = 1; num < 10; num++)
+				{
+					if(not (is_num_in_row(&p,board,num) or is_num_in_col(&p,board,num) or is_num_in_block(&p,board,num)) )
+					{
+						p.availist.push_back(num);
+					}
+				}
+				pointlist.push_back(p);
+			}
+		}
+	}
+	return pointlist;
+}
+/*
+ * description: whether a num in the board's row elements
+ *
+ * return value: true: the num is in the board row
+ *               false: the num isn't in the board row
+ * */
+bool is_num_in_row(point *p,int board[][9],int num)
+{
+	int row[9];
+	for(int i=0; i<9; i++)
+		row[i]=board[p->row][i];
+	for(int i=0; i<9; i++)
+		if(num == row[i])
+			return true;
+	return false;
+}
+/*
+ * description: whether a num in the board's column elements
+ *
+ * return value: true: the num is in the board column
+ *               false: the num isn't in the board column
+ * */
+bool is_num_in_col(point *p,int board[][9],int num)
+{
+	int col[9];
+	for(int i=0; i<9; i++)
+		col[i]=board[i][p->col];
+	for(int i=0; i<9; i++)
+		if(num == col[i])
+			return true;
+	return false;
+}
+/*
+ * description: whether a num in the board's block elements
+ *
+ * return value: true: the num is in the board block
+ *               false: the num isn't in the board block
+ * */
+bool is_num_in_block(point *p,int board[][9],int num)
+{
+	int block[9];
+	int row_col[2]; /* base_point, it records the start of block */
+	int j = 0;
+
+	/* find the start location block of the element*/
+	for(int i=0; i<2; i++)
+		row_col[i] = base_point[p->row/3*3+p->col/3][i];
+	/* put the element in block array*/
+	for(int r=row_col[0]; r<row_col[0]+3; r++)
+		for(int c=row_col[1]; c<row_col[1]+3; c++)
+			block[j++] = board[r][c];
+	/* compare num with block elements*/
+	for(int i=0; i<9; i++)
+		if(num == block[i])
+			return true;
+	return false;
+}
+/*
+ * description: check whether the point value is valid in this position
+ *
+ * return value: true: valid
+ * 				 false:invalid
+ *
+ * */
+bool check(point *p, int board[][9])
+{
+	if(p->value == 0)
+	{
+		cout << "please assign an available value!" << endl;
+		return false;
+	}
+	else if(p->value<0 or p->value>9)
+	{
+		cout << "value is invalid!" << endl;
+		return false;
+	}
+	else if(not (is_num_in_row(p,board,p->value) or is_num_in_col(p,board,p->value) or is_num_in_block(p,board,p->value)))
+		return true;
+	else
+		return false;
+}
+/*
+ * description: output the board all element
+ *
+ * return value: none
+ *
+ * */
+void outputboard(int board[][9])
+{
+	for(int r=0; r<9; r++)
+	{
+		for(int c=0; c<9; c++)
+		{
+			cout << board[r][c] << " ";
+		}
+		cout << endl;
+	}
+}
+void solve(point p, int board[][9])
+{
+//	cout << "Enter " << p.row << " " << p.col << endl;
+
+	for(list<int>::iterator v = p.availist.begin(); v != p.availist.end(); v++)
+	{
+		//cout << *it << endl;
+		p.value = *v;
+		if(check(&p,board))
+		{
+			board[p.row][p.col] = p.value;
+			//outputboard(board);
+			if(pointList.size() == 0)
+			{
+				outputboard(board);
+				return;
+			}
+			/* deep recursive search */
+			point p2 = pointList.back();
+			pointList.pop_back();
+			solve(p2,board);
+			/* roll back */
+			p2.value = 0;
+			board[p2.row][p2.col] = 0;
+			pointList.push_back(p2);
+		}
+	}
+//	cout << "Exit " << p.row << " " << p.col << endl;
+}
+int main(void)
+{
+	int board[][9] = {{8,0,0, 0,0,0, 0,0,0},
+			          {0,0,3, 6,0,0, 0,0,0},
+					  {0,7,0, 0,9,0, 2,0,0},
+					  {0,5,0, 0,0,7, 0,0,0},
+					  {0,0,0, 0,4,5, 7,0,0},
+					  {0,0,0, 1,0,0, 0,3,0},
+					  {0,0,1, 0,0,0, 0,6,8},
+					  {0,0,8, 5,0,0, 0,1,0},
+					  {0,9,0, 0,0,0, 4,0,0}};
+	pointList = init_board(board);
+	outputboard(board);
+	cout << endl;
+
+	point p = pointList.back();
+	pointList.pop_back();
+
+
+	solve(p, board);
+	cout << "all done!" << endl;
+	//output all points'row column and available list
+	/*for(pointlist_t::iterator it = pointList.begin(); it != pointList.end(); it++)
+	{
+		cout << it->row << " " << it->col << " [" ;
+		for(std::list<int>::iterator it1 = it->availist.begin(); it1 != it->availist.end(); it1++)
+			cout << *it1 << " ";
+		cout << "]" << endl;
+	}*/
+
+
+
+	return 0;
+}
+
+

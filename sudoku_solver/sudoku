@@ -1,0 +1,23 @@
+/*
+ * sudoku.h
+ *
+ *  Created on: 2018Äê8ÔÂ6ÈÕ
+ *      Author: t84105238
+ */
+
+#ifndef INC_SUDOKU_H_
+#define INC_SUDOKU_H_
+#include "type.h"
+/*********************************************************************
+ *
+ * 		function definition area
+ *
+ *********************************************************************/
+bool is_num_in_row(point *p,int board[][9],int num);
+bool is_num_in_col(point *p,int board[][9],int num);
+bool is_num_in_block(point *p,int board[][9],int num);
+pointlist_t init_board(int board[][9]);
+bool check(point *p, int board[][9]);
+
+
+#endif /* INC_SUDOKU_H_ */
