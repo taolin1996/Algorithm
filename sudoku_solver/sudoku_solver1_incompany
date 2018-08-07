@@ -1,0 +1,84 @@
+import time
+base_point = [[0,0],[0,3],[0,6],
+              [3,0],[3,3],[3,6],
+              [6,0],[6,3],[6,6]]
+class point:
+    def __init__(self, row, col):
+        self.row = row        #该点位于的行数
+        self.col = col        #该点位于的列数
+        self.value = 0        #表示该点要填入的数
+        self.availist = []    #表示该点在初始状态下可填入的数字
+def init_board(board):
+    pointlist = []  #结点列表，记录所有值为0的结点
+    for r in range(9):
+        for c in range(9):
+            if board[r][c] == 0: #如果有某个结点值为0
+                p = point(r,c)   #初始化该结点
+                for i in range(1,10):
+                    if i not in row(p,board) and i not in col(p,board) and i not in block(p,board):
+                        p.availist.append(i) #将有效的数字加入到availist中
+                pointlist.append(p)
+    return pointlist
+#获取数独的某一行的元素               
+def row(p, board):
+    return set(board[p.row])
+#获取数独的某一列的元素
+def col(p, board):
+    return set([board[r][p.col] for r in range(9)])
+#获取数独对应某一宫的元素
+def block(p, board):
+    row,col = base_point[int(p.row/3)*3+int(p.col/3)]
+    return set([board[r][c] for r in range(row,row+3) for c in range(col, col+3)])
+#检查填入的数字是否合法
+def check(p, board):
+    if p.value == 0:
+        print("Please assign an availiable value in this point!")
+        return
+    elif p.value not in row(p,board) and p.value not in col(p,board) and p.value not in block(p,board):
+        return True
+    else:
+        return False
+#深搜
+def solve(p, board):
+    availist = p.availist
+    for v in availist:
+        p.value = v
+        if check(p, board):  #检查合理就继续往下填
+            board[p.row][p.col] = p.value
+            if len(pointList) == 0:
+                outputsudoku(board)
+                print("用时1：",time.time()-t1,"s")
+                return
+            p2 = pointList.pop()
+            solve(p2, board)
+            board[p2.row][p2.col] = 0 #深搜完的回溯
+            p2.value = 0
+            pointList.append(p2)
+#输出数独
+def outputsudoku(board):
+    [print(board[i]) for i in range(9)]
+sudoku=[[0,0,0, 0,0,0, 0,5,9],
+        [0,1,0, 0,0,4, 0,0,0],
+        [0,8,0, 1,0,0, 0,0,0],
+        [0,0,0, 0,0,0, 4,0,7],
+        [5,0,3, 0,6,0, 0,0,0],
+        [9,0,0, 0,0,0, 0,0,0],
+        [6,0,0, 0,0,0, 0,3,0],
+        [0,0,0, 0,0,1, 0,0,0],
+        [0,7,0, 8,0,0, 2,0,0]]
+sudoku=[[8,0,0, 0,0,0, 0,0,0],
+        [0,0,3, 6,0,0, 0,0,0],
+        [0,7,0, 0,9,0, 2,0,0],
+        [0,5,0, 0,0,7, 0,0,0],
+        [0,0,0, 0,4,5, 7,0,0],
+        [0,0,0, 1,0,0, 0,3,0],
+        [0,0,1, 0,0,0, 0,6,8],
+        [0,0,8, 5,0,0, 0,1,0],
+        [0,9,0, 0,0,0, 4,0,0]]
+pointList = init_board(sudoku)
+[print(i.row, i.col, i.availist) for i in pointList]
+##p = pointList.pop()
+##outputsudoku(sudoku)
+##t1 = time.time()
+##solve(p, sudoku)
+##print("用时2：",time.time()-t1,"s")
