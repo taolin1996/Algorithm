@@ -1,0 +1,235 @@
+import time
+import copy
+
+#九宫格的基准列表
+base_points=[[0,0],[0,3],[0,6],
+             [3,0],[3,3],[3,6],
+             [6,0],[6,3],[6,6]]
+class Recorder:
+    point = None     #进行猜测的点
+    point_index = 0  #猜测候选列表使用值的索引
+    board = None     #回溯记录的值
+    
+class Sudo():
+    def __init__(self, data):
+        #数据初始化
+        self.board = data
+        self.new_points = []  #先进先出的新解坐标
+        self.recorder = []    #先进后出的回溯器
+        self.guess_times = 0   #猜测次数
+
+        for r in range(9):
+            for c in range(9):
+                if self.board[r][c] == 0:
+                    self.board[r][c] = [1,2,3,4,5,6,7,8,9]
+                else:
+                    self.new_points.append((r, c))
+
+    def row(self, point):
+        r, c = point
+        return [i for i in self.board[r] if isinstance(i, int)]
+
+    def col(self, point):
+        row, col = point
+        colist = [self.board[r][col] for r in range(9)]
+        return [i for i in colist if isinstance(i,int)]
+
+    def block(self, point):
+        row,col = base_points[int(point[0]/3)*3+int(point[1]/3)]
+        return [self.board[r][c] for r in range(row,row+3) for c in range(col, col+3) if isinstance(self.board[r][c],int)]
+
+    #某个点除去不符合条件的数
+    def cut_num(self,point):
+        r, c = point
+        val = self.board[r][c]
+
+        #行
+        for i, item in enumerate(self.board[r]):
+            if isinstance(item, list):
+                if item.count(val):
+                    item.remove(val)
+                    if len(item) == 1:
+                        self.new_points.append((r,i))
+                        self.board[r][i] = item[0]
+
+        #列
+        colist = [self.board[r][c] for r in range(9)]
+        for i, item in enumerate(colist):
+            if isinstance(item, list):
+                if item.count(val):
+                    item.remove(val)
+                    if len(item) == 1:
+                        self.new_points.append((i,c))
+                        self.board[i][c] = item[0]
+        #所在的九宫格
+        row,col = base_points[int(r/3)*3+int(c/3)]
+        block = [self.board[ro][co] for ro in range(row,row+3) for co in range(col, col+3)]
+        for m_r, rowelem in enumerate(self.board[row:row+3]):
+            for m_c, item in enumerate(rowelem[col:col+3]):
+                if isinstance(item, list):
+                    if item.count(val):
+                        item.remove(val)
+
+                        #判断移除后，是否剩下一个元素
+                        if len(item) == 1:
+                            r = row + m_r
+                            c = col + m_c
+                            self.new_points.append((r,c))
+                            self.board[r][c] = item[0]
+
+
+    #排除法解题            
+    def solve_sudo(self):
+        while len(self.new_points) >= 1:
+            point = self.new_points.pop()
+            self.cut_num(point)
+    #输出数独
+    def outputboard(self):
+        [print(self.board[i]) for i in range(9)]
+    #解题
+    def calc(self):
+        #第一次解题
+        self.solve_sudo()
+
+        #检查有没有错误，有错误则回溯，没错误却未解开题目，则再猜测
+        while True:
+            if self.check():
+                if self.get_num_count() == 81:
+                    self.outputboard()
+                    print()
+                    #如何才能让它解出多解数独的所有解呢？
+                    if len(self.recorder) > 0:
+                        self.reback()
+                    else:
+                        break
+                        
+                else:
+                    #获取最佳猜测点
+                    point = self.get_best_point()
+
+                    #记录并处理
+                    self.record_guess(point)
+            else:
+                #出错，则回溯，尝试下一个猜测
+                self.reback()
+    def reback(self):
+        while True:
+            
+            if len(self.recorder) == 0:
+                exit()
+            else:
+                recorder = self.recorder.pop()
+                point = recorder.point
+                r, c = point
+                index = recorder.point_index + 1
+                item = recorder.board[r][c]
+
+                #判断索引是否超出范围。若超出，则再回溯一次。
+                if index < len(item):
+                    break
+        self.board = recorder.board
+        self.record_guess(point, index)
+    def record_guess(self, point, index = 0):
+        #记录
+        recorder = Recorder()
+        recorder.point = point
+        recorder.point_index = index
+        recorder.board = copy.deepcopy(self.board)
+        self.recorder.append(recorder)
+        self.guess_times += 1
+
+        #新一轮的排除处理
+        r, c = point
+        item = self.board[r][c]
+        self.board[r][c] = item[index]
+        self.new_points.append(point)
+        self.solve_sudo()
+    #获取最佳猜测坐标
+    def get_best_point(self):
+        best_score = 0
+        best_point = (0,0)
+        
+        for r, row in enumerate(self.board):
+            for c, item in enumerate(row):
+                point_score = self.get_point_score((r, c))
+                if best_score < point_score:
+                    best_score = point_score
+                    best_point = (r,c)
+        return best_point
+    def get_point_score(self, point):
+        #评分标准 （10-候选个数）+ 同行确定数字个数 + 同列确定数字个数
+        r, c = point
+        item = self.board[r][c]
+
+        if isinstance(item, list):
+            score = 10 - len(item)
+            score += sum(map(lambda x: 1 if isinstance(x,int) else 0, self.row(point)))
+            score += sum(map(lambda x: 1 if isinstance(x,int) else 0, self.col(point)))
+            return score
+        else:
+            return 0
+        
+    def get_num_count(self):
+        s = 0
+        for r in range(9):
+            s = s + sum(map(lambda x: 1 if isinstance(x,int) else 0, self.board[r]))
+        return s
+    def check(self):
+        #行检查
+        for row in self.board:
+            lists = []
+            nums = []
+            for item in row:
+                (lists if isinstance(item,list) else nums).append(item)
+            if len(set(nums)) != len(nums):  #元素无重复
+                return False
+            if len(list(filter(lambda x: len(x) == 0, lists))):  #没有空列表
+                return False
+        #列检查
+        for c in range(9):
+            nums = []
+            lists = []
+            col = [self.board[r][c] for r in range(9)]
+            for item in col:
+                (lists if isinstance(item,list) else nums).append(item)
+            if len(set(nums)) != len(nums):  #元素无重复
+                return False
+            if len(list(filter(lambda x: len(x) == 0, lists))):  #没有空列表
+                return False
+        #宫检查
+        for b_r, b_c in base_points:
+            nums = []
+            lists = []
+            block = [self.board[r][c] for r in range(b_r,b_r+3) for c in range(b_c, b_c+3)]
+            for item in block:
+                (lists if isinstance(item,list) else nums).append(item)
+            if len(set(nums)) != len(nums):  #元素无重复
+                return False
+            if len(list(filter(lambda x: len(x) == 0, lists))):  #没有空列表
+                return False    
+        return True
+
+sudoku = [[8,0,0, 0,0,0, 0,0,0],
+          [0,0,3, 6,0,0, 0,0,0],
+          [0,7,0, 0,9,0, 2,0,0],
+          [0,5,0, 0,0,7, 0,0,0],
+          [0,0,0, 0,4,5, 7,0,0],
+          [0,0,0, 1,0,0, 0,3,0],
+          [0,0,1, 0,0,0, 0,6,8],
+          [0,0,8, 5,0,0, 0,1,0],
+          [0,9,0, 0,0,0, 4,0,0]]
+##sudoku = [[0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0],
+##          [0,0,0, 0,0,0, 0,0,0]]
+test = Sudo(sudoku)
+test.calc()
+
+        
+        
+        
